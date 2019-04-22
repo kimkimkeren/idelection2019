@@ -70,7 +70,37 @@ def crawl_kecamatan(wilayah, wilayah_name, kabupaten, kabupaten_name, kecamatan,
 	flatten_result = [item for sublist in result for item in sublist]
 	pool.close()
 	writer.writerows(flatten_result)
-		
+
+def crawl_kabupatan(wilayah, wilayah_name, kabupaten, kabupaten_name, kabupaten_json, writer):
+
+	for kecamatan in kabupaten_json.keys():
+		kecamatan_name = kabupaten_json[kecamatan].get("nama")
+		kecamatan_json_file = str(wilayah) + "/" + str(kabupaten) + "/" + str(kecamatan) + ".json"
+		try:
+			r = requests.get(area_url_skeleton + kecamatan_json_file, verify=False, timeout=30)
+			kecamatan_json = json.loads(r.text)
+
+			print(wilayah, wilayah_name, kabupaten, kabupaten_name, kecamatan, kecamatan_name)
+			crawl_kecamatan(wilayah, wilayah_name, kabupaten, kabupaten_name, kecamatan, kecamatan_name, kecamatan_json, writer)
+
+		except Exception as e:
+			print(e)
+
+def crawl_wilayah(wilayah, wilayah_name, wilayah_json, writer):
+
+	for kabupaten in wilayah_json.keys():
+		kabupaten_name = wilayah_json[kabupaten].get("nama")
+		kabupaten_json_file = str(wilayah) + "/" + str(kabupaten) + ".json"
+		try:
+			r = requests.get(area_url_skeleton + kabupaten_json_file, verify=False, timeout=30)
+			kabupaten_json = json.loads(r.text)
+
+			crawl_kabupatan(wilayah, wilayah_name, kabupaten, kabupaten_name, kabupaten_json, writer)
+
+		except Exception as e:
+			print(e)
+
+
 if __name__ == '__main__':
 	with open('result-' + time.strftime("%Y%m%d%H%M%S") + '.csv', 'w') as csv_file:
 		writer = csv.writer(csv_file)
@@ -89,53 +119,8 @@ if __name__ == '__main__':
 				r = requests.get(area_url_skeleton + wilayah_json_file, verify=False, timeout=30)
 				wilayah_json = json.loads(r.text)
 
-				for kabupaten in wilayah_json.keys():
-					kabupaten_name = wilayah_json[kabupaten].get("nama")
-					kabupaten_json_file = str(wilayah) + "/" + str(kabupaten) + ".json"
-					try:
-						r = requests.get(area_url_skeleton + kabupaten_json_file, verify=False, timeout=30)
-						kabupaten_json = json.loads(r.text)
+				crawl_wilayah(wilayah, wilayah_name, wilayah_json, writer)
 
-						for kecamatan in kabupaten_json.keys():
-							kecamatan_name = kabupaten_json[kecamatan].get("nama")
-							kecamatan_json_file = str(wilayah) + "/" + str(kabupaten) + "/" + str(kecamatan) + ".json"
-							try:
-								r = requests.get(area_url_skeleton + kecamatan_json_file, verify=False, timeout=30)
-								kecamatan_json = json.loads(r.text)
-
-								print(wilayah, wilayah_name, kabupaten, kabupaten_name, kecamatan, kecamatan_name)
-								crawl_kecamatan(wilayah, wilayah_name, kabupaten, kabupaten_name, kecamatan, kecamatan_name, kecamatan_json, writer)
-
-								# for kelurahan in kecamatan_json.keys():
-								# 	kelurahan_name = kecamatan_json[kelurahan].get("nama")
-								# 	kelurahan_json_file = str(wilayah) + "/" + str(kabupaten) + "/" + str(kecamatan) + "/" + str(kelurahan) + ".json"
-								# 	try:
-								# 		r = requests.get(area_url_skeleton + kelurahan_json_file, verify=False, timeout=30)
-								# 		kelurahan_json = json.loads(r.text)
-
-								# 		for tps in kelurahan_json.keys():
-								# 			tps_name = kelurahan_json[tps].get("nama")
-								# 			tps_json_file = str(wilayah) + "/" + str(kabupaten) + "/" + str(kecamatan) + "/" + str(kelurahan) + "/" + str(tps) + ".json"
-								# 			try:
-								# 				r = requests.get(result_url_skeleton + tps_json_file, verify=False, timeout=30)
-								# 				tps_result_json = json.loads(r.text)
-								# 				print(tps, tps_result_json)
-								# 				if (tps_result_json != {}):
-								# 					writer.writerow([
-								# 						wilayah_name, kabupaten_name, kecamatan_name, kelurahan_name, tps_name, tps_result_json["ts"],
-								# 						tps_result_json["pemilih_j"], tps_result_json["pengguna_j"], tps_result_json["chart"]["21"], tps_result_json["chart"]["22"],
-								# 						tps_result_json["suara_sah"], tps_result_json["suara_tidak_sah"], tps_result_json["suara_total"],
-								# 						image_url_skeleton + "/" + tps[:3] + "/" + tps[3:6] + "/" + tps + tps_result_json["images"][0],
-								# 						image_url_skeleton + "/" + tps[:3] + "/" + tps[3:6] + "/" + tps + tps_result_json["images"][1]
-								# 					])
-								# 			except Exception as e:
-								# 				print(e)
-								# 	except Exception as e:
-								# 		print(e)
-							except Exception as e:
-								print(e)
-					except Exception as e:
-						print(e)
 			except Exception as e:
 				print(e)
 
