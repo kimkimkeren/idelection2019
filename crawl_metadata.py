@@ -35,13 +35,13 @@ def expand(row):
 			# print(row[-1], file=sys.stderr)
 			# print(e, file=sys.stderr)
 			# print("", file=sys.stderr)
-		if result == []:
-			time.sleep(sleep_time)
+		if not result == []:
+			print(row[-1] + " success!")
+			break
 		elif i == retry_count-1:
 			print(row[-1] + " failed to be crawled", file=sys.stderr)
 		else:
-			print(row[-1] + " success!")
-			break
+			time.sleep(sleep_time)
 	return result
 
 if __name__ == '__main__':
