@@ -6,21 +6,57 @@ import requests
 import pathlib
 import sys
 import os
+import time
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 image_url_skeleton = "https://pemilu2019.kpu.go.id/img/c/"
 
+connection_count = 100
+retry_count = 3
+time_out = 30
+chunk_size = 100
+root_folder = "."
+
 def download_image(link):
-	try:
-		r = requests.get(link, allow_redirects=True, verify=False, timeout=30)
-		filename = link.replace(image_url_skeleton, '')
-		pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
-		open(filename, 'wb').write(r.content)
-	except Exception as e:
-		print(e)
+	write = False
+	start = time.time()
+	for i in range(retry_count):
+		try:
+			filename = link.replace(image_url_skeleton, '')
+			filename = root_folder + "/" + filename
+			pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
+			r = requests.get(link, allow_redirects=True, verify=False, timeout=time_out)
+			open(filename, 'wb').write(r.content)
+			write = True
+			break
+		except Exception as e:
+			pass
+			# print("Try : " + str(i+1), file=sys.stderr)
+			# print(row[-1], file=sys.stderr)
+			# print(e, file=sys.stderr)
+			# print("", file=sys.stderr)
+		if i == retry_count-1:
+			print(link, file=sys.stderr)
+		else:
+			time.sleep(3*(i+1))
+	end = time.time()
+	print(write,end-start)
 
 
 data = pd.read_csv(sys.argv[1])
+root_folder = sys.argv[2] if len(sys.argv) > 2 else "."
 image_links_data = data[['link C1 halaman 1', 'link C1 halaman 2']]
-for _, image_links in image_links_data.iterrows():
-	download_image(image_links['link C1 halaman 1'])
-	download_image(image_links['link C1 halaman 2'])
+images = data['link C1 halaman 2'].values.tolist() + data['link C1 halaman 1'].values.tolist()
+
+for r, d, f in os.walk(root_folder):
+	for file in f:
+		images.remove(image_url_skeleton + os.path.join(r, file).replace(root_folder + "/", ""))
+
+index = [i for i in range(0, len(images), chunk_size)]
+index.append(len(images))
+for i in range(len(index)-1):
+	p = Pool(connection_count)
+	p.map(download_image, images[index[i]:index[i+1]])
+	p.close()

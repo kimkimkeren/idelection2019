@@ -56,10 +56,21 @@ def expand(row):
 
 
 if __name__ == '__main__':
-	result_tps = pd.read_csv(sys.argv[1]).values.tolist()
+	result_tps_df = pd.read_csv(sys.argv[1])
+	result_tps = result_tps_df.values.tolist()
+
+	if len(sys.argv) > 2:
+		recap = pd.read_csv(sys.argv[2])
+		result_tps = pd.merge(
+				result_tps_df, recap,
+				on=['wilayah','kabupaten','kecamatan','kelurahan','tps'],
+				how='outer', indicator=True
+			).query(
+				"_merge == 'left_only'"
+			).reset_index()[['wilayah','kabupaten','kecamatan','kelurahan','tps','link']].values.tolist()
+
 	index = [i for i in range(0, len(result_tps), chunk_size)]
 	index.append(len(result_tps))
-	
 	with open('recap-tps-' + time.strftime("%Y%m%d%H%M%S") + '.csv', 'w') as csv_file:
 		writer = csv.writer(csv_file)
 		writer.writerow(["wilayah", "kabupaten", "kecamatan", "kelurahan", "tps", "timestamp",
