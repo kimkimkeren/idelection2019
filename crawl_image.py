@@ -1,4 +1,4 @@
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 
 import pandas as pd 
 import re
@@ -44,15 +44,26 @@ def download_image(link):
 	end = time.time()
 	print(write,end-start)
 
-
 data = pd.read_csv(sys.argv[1])
 root_folder = sys.argv[2] if len(sys.argv) > 2 else "."
 image_links_data = data[['link C1 halaman 1', 'link C1 halaman 2']]
 images = data['link C1 halaman 2'].values.tolist() + data['link C1 halaman 1'].values.tolist()
 
+print("Scanning retrieved files...", file=sys.stderr)
+image_count = len(images)
+print(image_count, file=sys.stderr)
+current_images = []
 for r, d, f in os.walk(root_folder):
 	for file in f:
-		images.remove(image_url_skeleton + os.path.join(r, file).replace(root_folder + "/", ""))
+		file_path = os.path.join(r, file)
+		file_link = image_url_skeleton + file_path.replace(root_folder + "/", "")
+		if os.path.getsize(file_path) < 100000:
+			os.remove(file_path)
+		else:
+			current_images.append(file_link)
+images = list(set(images) - set(current_images))
+print(len(images), file=sys.stderr)
+print("Scanning retrieved files done", file=sys.stderr)
 
 index = [i for i in range(0, len(images), chunk_size)]
 index.append(len(images))
