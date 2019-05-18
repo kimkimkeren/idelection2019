@@ -29,13 +29,15 @@ def expand(row):
 			skeleton = row[-1].split('.json')[0]
 			tps = skeleton.split('/')[-1]
 			tps_result_json = json.loads(r.text)
-			if (tps_result_json != {}):
+			if tps_result_json != {}:
+				c1_image_1 = image_url_skeleton + tps[:3] + "/" + tps[3:6] + "/" + tps + "/" + tps_result_json["images"][0] \
+					if len(tps_result_json["images"]) > 0 and tps_result_json["images"][0] is not None else None
+				c1_image_2 = image_url_skeleton + tps[:3] + "/" + tps[3:6] + "/" + tps + "/" + tps_result_json["images"][1] \
+					if len(tps_result_json["images"]) > 0 and tps_result_json["images"][0] is not None else None
 				result = [
 					tps_result_json["ts"],
 					tps_result_json["pemilih_j"], tps_result_json["pengguna_j"], tps_result_json["chart"]["21"], tps_result_json["chart"]["22"],
-					tps_result_json["suara_sah"], tps_result_json["suara_tidak_sah"], tps_result_json["suara_total"],
-					image_url_skeleton + tps[:3] + "/" + tps[3:6] + "/" + tps + "/" + tps_result_json["images"][0],
-					image_url_skeleton + tps[:3] + "/" + tps[3:6] + "/" + tps + "/" + tps_result_json["images"][1]
+					tps_result_json["suara_sah"], tps_result_json["suara_tidak_sah"], tps_result_json["suara_total"], c1_image_1, c1_image_2
 				]
 				result = row[:-1] + result
 			write = True
