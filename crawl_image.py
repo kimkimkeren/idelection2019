@@ -48,7 +48,7 @@ data = pd.read_csv(sys.argv[1])
 root_folder = sys.argv[2] if len(sys.argv) > 2 else "."
 image_links_data = data[['link C1 halaman 1', 'link C1 halaman 2']]
 images = data['link C1 halaman 2'].values.tolist() + data['link C1 halaman 1'].values.tolist()
-images = [image for image in images if image is not None]
+images = [image for image in images if str.lower(str(image)) != "nan"]
 
 print("Scanning retrieved files...", file=sys.stderr)
 image_count = len(images)
