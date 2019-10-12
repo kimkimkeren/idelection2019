@@ -43,7 +43,7 @@ def expand(row):
 			write = True
 			break
 		except Exception as e:
-			pass
+			print(e)
 			# print("Try : " + str(i+1), file=sys.stderr)
 			# print(row[-1], file=sys.stderr)
 			# print(e, file=sys.stderr)
